@@ -11,7 +11,8 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import UserStore
-from users.serializer import UserStoreSerializer, UserInfoSerializer
+from users.serializer import UserStoreSerializer, UserInfoSerializer, \
+    UserPasswordResetSerializer
 
 
 # Create your views here.
@@ -44,7 +45,6 @@ class UserLogin(ViewSet):
             hashed_password = user.password
             print(hashed_password)
             passwords_match = check_password(received_password, hashed_password)
-
             if passwords_match:
                 # return Response('您将要登录了')
 
@@ -65,28 +65,54 @@ class UserLogin(ViewSet):
             return Response('您输入的用户名不存在')
 
 
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+#@authentication_classes([JWTAuthentication])
+#@permission_classes([IsAuthenticated])
 class UserList(ViewSet):
     def list(self, request):
         users = UserStore.objects.all()
         ser = UserStoreSerializer(users, many=True)
         return Response(ser.data)
 
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+#@authentication_classes([JWTAuthentication])
+#@permission_classes([IsAuthenticated])
 class UserInfo(ViewSet):
-    def retrieve(self,request, pk):
+    def retrieve(self,request):
         username = request.user.username
         user = UserStore.objects.get(username=username)
         ser = UserInfoSerializer(user)
         return Response(ser.data)
 
-    def update(self,request, pk):
+    def update(self,request):
         data = request.data
         username = request.user.username
         user = UserStore.objects.get(username=username)
         ser = UserInfoSerializer(user, data=data)
-        ser.is_valid()
-        ser.save()
-        return Response(ser.data)
+        #ser.is_valid()
+        #ser.save()
+        if ser.is_valid():
+            ser.save()
+            return Response(ser.data, status=status.HTTP_201_CREATED)
+        else:
+            print(ser.errors)
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        #return Response(ser.data)
+
+
+#@authentication_classes([JWTAuthentication])
+#@permission_classes([IsAuthenticated])
+class UserPasswordReset(ViewSet):
+
+    def update(self,request):
+        data = request.data
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        if user.check_password(data['old_pwd']):
+            ser = UserPasswordResetSerializer(user, data=data)
+            if ser.is_valid():
+                ser.save()
+                return Response(ser.data, status=status.HTTP_201_CREATED)
+            else:
+                print(ser.errors)
+                return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response('当前密码不正确')
