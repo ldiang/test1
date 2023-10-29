@@ -24,7 +24,7 @@ class Books_drf(GenericViewSet):
 
 class Book_drf(GenericViewSet):
 
-    def lastdata(self,request,pk):
+    def retrieve(self,request,pk):
         book=BookInfo.objects.get(id=pk)
         ser=BooksSerializer(book)
         return Response(ser.data)

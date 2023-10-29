@@ -7,6 +7,9 @@ class CatesSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     cate_name = serializers.CharField(required=True)
     cate_alias = serializers.CharField(required=True)
+    #因为外键被自动添加了_id,所以这里用creator_id只参加反序列化过程
+    creator_id = serializers.IntegerField(write_only=True, required=False)
+
 
     def validate_cat_name(self, value):
         if not re.match("^\S{1,10}$", value):
@@ -21,3 +24,9 @@ class CatesSerializer(serializers.Serializer):
     def create(self, validated_data):
         cate = CateStore.objects.create(**validated_data)
         return cate
+
+    def update(self, instance, validated_data):
+        instance.cate_name = validated_data['cate_name']
+        instance.cate_alias = validated_data['cate_alias']
+        instance.save()
+        return instance
