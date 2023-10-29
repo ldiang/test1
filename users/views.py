@@ -11,7 +11,7 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import UserStore
-from users.serializer import UserStoreSerializer
+from users.serializer import UserStoreSerializer, UserInfoSerializer
 
 
 # Create your views here.
@@ -71,4 +71,22 @@ class UserList(ViewSet):
     def list(self, request):
         users = UserStore.objects.all()
         ser = UserStoreSerializer(users, many=True)
+        return Response(ser.data)
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class UserInfo(ViewSet):
+    def retrieve(self,request, pk):
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        ser = UserInfoSerializer(user)
+        return Response(ser.data)
+
+    def update(self,request, pk):
+        data = request.data
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        ser = UserInfoSerializer(user, data=data)
+        ser.is_valid()
+        ser.save()
         return Response(ser.data)

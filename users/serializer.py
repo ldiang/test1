@@ -1,10 +1,10 @@
+from django.core.validators import EmailValidator
 from rest_framework import serializers
 from users.models import UserStore
 import re
 
 
 class UserStoreSerializer(serializers.ModelSerializer):
-
     id = serializers.ReadOnlyField()
     username = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True)
@@ -12,9 +12,9 @@ class UserStoreSerializer(serializers.ModelSerializer):
     is_staff = serializers.BooleanField(default=True, write_only=True)
 
     class Meta:
-        model=UserStore
-        #fields = '__all__'
-        fields=('id','username','password', 'repassword', 'is_staff')
+        model = UserStore
+        # fields = '__all__'
+        fields = ('id', 'username', 'password', 'repassword', 'is_staff')
 
     def validate(self, value):
         password = value['password']
@@ -38,6 +38,35 @@ class UserStoreSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         username = validated_data['username']
         password = validated_data['password']
-        user = UserStore.objects.create_user(username=username, password=password)
+        user = UserStore.objects.create_user(username=username,
+                                             password=password)
 
         return user
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
+    username = serializers.CharField()
+    nickname = serializers.CharField()
+    email = serializers.EmailField(validators=[EmailValidator(
+        message='Invalid email format')], source='email')
+    user_pic = serializers.CharField(max_length=2000)
+
+    class Meta:
+        model = UserStore
+        fields = ('id', 'username', 'nickname', 'email', 'user_pic')
+
+    def validate_nickname(self, value):
+        if not (1 <= len(value) <= 10):
+            raise serializers.ValidationError('用户名长度必须在1到10位之间')
+        if not re.match("^[a-zA-Z0-9]*$", value):
+            raise serializers.ValidationError('用户名只能包含大小写字母和数字')
+        return value
+
+    def update(self, instance, validated_data):
+        # 更新数据
+        instance.nickname = validated_data['nickname']
+        instance.email = validated_data['email']
+        instance.user_pic = validated_data['user_pic']
+        instance.save()
+        return instance
