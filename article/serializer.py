@@ -27,10 +27,3 @@ class ArticlesSerializer(serializers.Serializer):
         article = ArticleStore.objects.create(**validated_data)
         return article
 
-    def update(self, instance, validated_data):
-        # 更新数据
-        instance.nickname = validated_data['nickname']
-        instance.email = validated_data['email']
-        instance.user_pic = validated_data['user_pic']
-        instance.save()
-        return instance
