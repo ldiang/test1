@@ -10,8 +10,8 @@ class ArticleStore(models.Model):
     content = models.TextField()
     state = models.CharField(max_length=10,
                              choices=[("已发布", "已发布"), ("草稿", "草稿")])
-    cover_img = models.ImageField(upload_to='img/', blank=True, null=True)
-    cate_id = models.ManyToManyField(CateStore)
+    cover_img = models.ImageField(upload_to='media/img/', blank=True, null=True)
+    #cate_id = models.ManyToManyField(CateStore, through=ArticleCate)
     author_id = models.ForeignKey(UserStore, on_delete=models.SET_NULL,
                                   null=True)
     pub_date = models.DateTimeField()
@@ -23,3 +23,6 @@ class ArticleStore(models.Model):
 
     def __str__(self):
         return self.title
+
+
+

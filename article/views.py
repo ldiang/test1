@@ -1,45 +1,167 @@
+import uuid
 from datetime import datetime
+from django.conf.global_settings import MEDIA_ROOT
 
 from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.db.models import Q
 from django.shortcuts import render
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import status
+from rest_framework.mixins import ListModelMixin
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.response import Response
 
-from article.models import ArticleStore
-from article.serializer import ArticlesSerializer
 from users.models import UserStore
+from cate_article.models import CateStore
+from article.models import ArticleStore
+from article.intermediate import IntermediateArticleCate
+from article.serializer import ArticlesSerializer, ArticleCateSerializer
+from cincode_backend.settings import MEDIA_DIRS
+
 import os
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.conf import settings
 
 
 # Create your views here.
+class ArticlesPaginator(PageNumberPagination):
+    page_size = 4
+    max_page_size = 6
+    page_query_param = 'pagenum'
+    page_size_query_param = 'pagesize'
+
 class Articles(GenericViewSet):
     queryset = ArticleStore.objects.all()
     serializer_class = ArticlesSerializer
-
-    def list(self, request):
-        books = self.get_queryset()
-        ser = self.get_serializer(books, many=True)
-        return Response(ser.data)
+    pagination_class = ArticlesPaginator
 
     def create(self, request):
-        data = request.data
+        data = request.data.copy()  # 创建副本 尝试改写
+
         username = request.user.username
         user = UserStore.objects.get(username=username)
-        author_id = user.id
+
         pub_date = datetime.now()
-        data['author_id'] = author_id
+
+        data['author_id'] = user.id
         data['pub_date'] = pub_date
-
         ser = self.get_serializer(data=data)
-        ser.is_valid()
-        ser.save()
 
-        # 注意 前端传来表格数据中cover_img是file类型 包含文件本地地址
-        # cover_img_file这就是前端传来的文件对象
-        cover_img_file = request.FILES.get('cover_img')
-        if cover_img_file:
-            # 生成封面图片保存的路径，存储在STATIC_URL目录下
-            filename = os.path.join('img', cover_img_file.name)
-            ser.cover_img.save(filename, ContentFile(cover_img_file.read()),
-                               save=True)
+        if ser.is_valid():
+            ser.save()
+            ##############################################
+            #中间表
+            new_article = ArticleStore.objects.get(title=data['title'])
+            new_intermediate = {}
+            new_intermediate['article_id'] = new_article.id
+            new_intermediate['cate_id'] = data['cate_id']
+            new_res = ArticleCateSerializer(data=new_intermediate)
+            if new_res.is_valid():
+                new_res.save()
+            ##############################################
+            # 注意 前端传来表格数据中cover_img是file类型 包含文件本地地址
+            # cover_img_file这就是前端传来的文件对象
+            cover_img_file = request.FILES.get('cover_img')
+            if cover_img_file:
+                path = os.path.join(MEDIA_ROOT, 'img', cover_img_file.name)
+                default_storage.save(path, ContentFile(cover_img_file.read()))
+
+            return Response(ser.data, status=status.HTTP_201_CREATED)
+
+        else:
+            print(ser.errors)
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request):
+        #查询集需要根据某个条件排序后，才能继续查询和分页
+        queryset = self.get_queryset().order_by('id')
+        filter_cate = request.GET.get('cate_id')
+        filter_state = request.GET.get('state')
+        if filter_state:
+            queryset = queryset.filter(state=filter_state)
+
+        if filter_state:
+            article_ids = IntermediateArticleCate.objects.filter(
+                cate_id=filter_cate).values_list('article_id', flat=True)
+            queryset = queryset.filter(id__in=article_ids)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            ser = self.get_serializer(page, many=True)
+            return Response(ser.data)
+        return Response([])
+
+
+class Article(GenericViewSet):
+    queryset = ArticleStore.objects.all()
+    serializer_class = ArticlesSerializer
+    def update(self,request):
+        data = request.data.copy()
+        article = ArticleStore.objects.get(id=data['id'])
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        data['author_id'] = user.id
+        data['pub_date'] = article.pub_date
+        #提取旧图片地址 以备后续删除旧图片用
+        cover_old = article.cover_img
+
+        ser = ArticlesSerializer(article, data=data)
+        # ser.is_valid()
+        # ser.save()
+        # return Response(ser.data)
+        if ser.is_valid():
+            ser.save()
+
+            intermediate = IntermediateArticleCate.objects.get(
+                article_id=data['id'])
+            serinter = ArticleCateSerializer(intermediate, data=data)
+            if serinter.is_valid():
+                serinter.save()
+
+                cover_img_file = request.FILES.get('cover_img')
+                if cover_img_file:
+                    path = os.path.join(MEDIA_ROOT, 'img', cover_img_file.name)
+                    default_storage.save(path, ContentFile(cover_img_file.read()))
+
+                    #新图片保存成功，删除旧图片
+                    path_old = os.path.join(MEDIA_ROOT, 'img',
+                                            cover_old.path)
+                    if path_old:
+                        if os.path.exists(path_old):
+                            os.remove(path_old)
+                        else:
+                            return Response('您要删除的图片未保存到数据库中')
+
+                return Response(ser.data, status=status.HTTP_201_CREATED)
+            else:
+                print(serinter.errors)
+                return Response(serinter.errors, status=status.HTTP_201_CREATED)
+        else:
+            print(ser.errors)
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self,request):
+        id = request.GET.get('id')
+        article = ArticleStore.objects.select_related('author_id').get(
+            id=id)
+        #注意虽然数据库中是cate_id,但要按照模型类中的定义来
+        inter = IntermediateArticleCate.objects.select_related('cate').get(
+            id=id)
+        user = article.author_id
+        #注意虽然数据库中是cate_id,但要按照模型类中的定义来
+        cate = inter.cate
+        article.username = user.username
+        article.nickname = user.nickname
+        article.cate_id = cate.id
+        article.cate_name = cate.cate_name
+        article.cate_alias = cate.cate_alias
+
+        ser = self.get_serializer(article)
         return Response(ser.data)
+
+    def destroy(self, request):
+        id = request.GET.get('id')
+        article = ArticleStore.objects.get(id=id)
+        article.delete()
+
