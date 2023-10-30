@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'users.apps.UsersConfig',
     'cate_article.apps.CateArticleConfig',
+    'article.apps.ArticleConfig',
 ]
 
 MIDDLEWARE = [
@@ -128,6 +129,12 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
+]
+
+MEDIA_URL = '/media/'
+
+MEDIA_DIRS = [
+    os.path.join(BASE_DIR, 'media'),
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True

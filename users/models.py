@@ -23,5 +23,4 @@ class UserStore(AbstractUser):
         verbose_name_plural = verbose_name  # 显示的复数名称
 
     def __str__(self):
-        """定义每个数据对象的显示信息"""
         return self.username
