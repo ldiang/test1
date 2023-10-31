@@ -34,7 +34,7 @@ class ArticlesSerializer(serializers.Serializer):
     pub_date = serializers.DateTimeField()
     username = serializers.CharField(required=False)
     nickname = serializers.CharField(required=False)
-    cate_id = serializers.IntegerField(required=False)
+    #cate_id = serializers.IntegerField(required=False)
     cate_name = serializers.CharField(required=False)
     cate_alias = serializers.CharField(required=False)
 

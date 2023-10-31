@@ -52,12 +52,10 @@ class Articles(GenericViewSet):
             ser.save()
             ##############################################
             #中间表
-            #ser.instance 是序列化器保存数据后返回的模型实例。
-            #通过 id 过滤出唯一的 ArticleStore 对象
-            new_article = ArticleStore.objects.get(title=data['title'],
-                                                   id=ser.instance.id)
-            new_intermediate = {'article_id': new_article.id,
-                                'cate_id': data['cate_id']}
+            new_article = ArticleStore.objects.get(title=data['title'])
+            new_intermediate = {}
+            new_intermediate['article_id'] = new_article.id
+            new_intermediate['cate_id'] = data['cate_id']
             new_res = ArticleCateSerializer(data=new_intermediate)
             if new_res.is_valid():
                 new_res.save()
@@ -98,7 +96,6 @@ class Articles(GenericViewSet):
 class Article(GenericViewSet):
     queryset = ArticleStore.objects.all()
     serializer_class = ArticlesSerializer
-
     def update(self,request):
         data = request.data.copy()
         article = ArticleStore.objects.get(id=data['id'])
@@ -110,7 +107,9 @@ class Article(GenericViewSet):
         cover_old = article.cover_img
 
         ser = ArticlesSerializer(article, data=data)
-
+        # ser.is_valid()
+        # ser.save()
+        # return Response(ser.data)
         if ser.is_valid():
             ser.save()
 
