@@ -83,7 +83,7 @@ class Articles(GenericViewSet):
         if filter_state:
             queryset = queryset.filter(state=filter_state)
 
-        if filter_state:
+        if filter_cate:
             article_ids = IntermediateArticleCate.objects.filter(
                 cate_id=filter_cate).values_list('article_id', flat=True)
             queryset = queryset.filter(id__in=article_ids)
