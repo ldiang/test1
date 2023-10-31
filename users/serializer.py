@@ -11,6 +11,7 @@ class UserStoreSerializer(serializers.ModelSerializer):
     repassword = serializers.CharField(write_only=True, required=False)
     is_staff = serializers.BooleanField(default=True, write_only=True)
 
+
     class Meta:
         model = UserStore
         # fields = '__all__'
@@ -105,3 +106,7 @@ class UserPasswordResetSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class GroupSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.CharField(required=False)
