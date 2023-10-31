@@ -36,6 +36,7 @@ class UserCreate(ViewSet):
 
 class UserLogin(ViewSet):
 
+
     def create(self, request):
         data = request.data
         received_username = data['username']
@@ -54,8 +55,9 @@ class UserLogin(ViewSet):
                 refresh_token = str(refresh)
 
                 # 将令牌转换为字典以进行序列化
-                token_data = {
-                    'access_token': access_token,
+                token_data = {"code": 0,
+                              "message": "登录成功！",
+                              'token': "Bearer " + access_token,
                     # 'refresh_token': refresh_token,
                 }
                 return Response(token_data, status=status.HTTP_200_OK)
@@ -65,22 +67,38 @@ class UserLogin(ViewSet):
             return Response('您输入的用户名不存在')
 
 
-#@authentication_classes([JWTAuthentication])
-#@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class UserList(ViewSet):
     def list(self, request):
         users = UserStore.objects.all()
         ser = UserStoreSerializer(users, many=True)
         return Response(ser.data)
 
-#@authentication_classes([JWTAuthentication])
-#@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class UserInfo(ViewSet):
     def retrieve(self,request):
         username = request.user.username
         user = UserStore.objects.get(username=username)
         ser = UserInfoSerializer(user)
-        return Response(ser.data)
+        #return Response(ser.data)
+        return Response({"code": 0,
+                         "message": "获取用户基本信息成功！",
+                         "data": ser.data})
+
+    def partial_update(self, request, *args, **kwargs):
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        avatar_data = request.data.get('avatar')
+        print(len(avatar_data))
+        serialized_data = {'user_pic': avatar_data}
+        serializer = UserInfoSerializer(user, data=serialized_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"code": 0,
+                            "message": "更新头像成功！"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self,request):
         data = request.data
@@ -91,15 +109,18 @@ class UserInfo(ViewSet):
         #ser.save()
         if ser.is_valid():
             ser.save()
-            return Response(ser.data, status=status.HTTP_201_CREATED)
+            #return Response(ser.data, status=status.HTTP_201_CREATED)
+            return Response({"code": 0,
+                             "message": "修改用户信息成功！",
+                             "data": ser.data})
         else:
             print(ser.errors)
             return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
         #return Response(ser.data)
 
 
-#@authentication_classes([JWTAuthentication])
-#@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class UserPasswordReset(ViewSet):
 
     def update(self,request):
@@ -110,9 +131,13 @@ class UserPasswordReset(ViewSet):
             ser = UserPasswordResetSerializer(user, data=data)
             if ser.is_valid():
                 ser.save()
-                return Response(ser.data, status=status.HTTP_201_CREATED)
+                #return Response(ser.data, status=status.HTTP_201_CREATED)
+                return Response({"code": 0,
+                                 "message": "更新密码成功！",
+                                 "data": ser.data})
             else:
                 print(ser.errors)
                 return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response('当前密码不正确')
+            return Response({"code": 1,
+                             "message": "原密码错误！"})

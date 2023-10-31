@@ -3,11 +3,16 @@ from django.db.utils import IntegrityError
 from rest_framework.viewsets import ViewSet, GenericViewSet
 from rest_framework.response import Response
 from django.contrib.auth.models import Group
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from users.models import UserStore
 from users.serializer import GroupSerializer
 
 
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class GroupManage(ViewSet):
     def create(self, request):
         groupname = request.data.get('groupname')
@@ -42,6 +47,9 @@ class GroupManage(ViewSet):
 
         return Response(ser.data)
 
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class GroupAssign(GenericViewSet):
     def update(self,request):
         user_id = request.data.get('user_id')

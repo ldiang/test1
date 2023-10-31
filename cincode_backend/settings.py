@@ -10,14 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
+
+#from front_sidebar.apps import FrontSidebarConfig
 
 AUTH_USER_MODEL = 'users.UserStore'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0,os.path.join(BASE_DIR,'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -28,7 +32,7 @@ SECRET_KEY = 'django-insecure-gj*h%*ex3ip*m!tc)8zv^vw+hiii7vv6)-3lknev14_j@j%e$&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.2.113']
 
 # Application definition
 
@@ -46,6 +50,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'cate_article.apps.CateArticleConfig',
     'article.apps.ArticleConfig',
+    'apps.front_sidebar'
 ]
 
 MIDDLEWARE = [
@@ -125,17 +130,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-
+STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-MEDIA_DIRS = [
-    os.path.join(BASE_DIR, 'media'),
-]
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+
+
+
 
 CORS_ORIGIN_ALLOW_ALL = True
 

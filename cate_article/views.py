@@ -29,12 +29,17 @@ class Cates(GenericViewSet):
         ser = self.get_serializer(data=data)
         ser.is_valid()
         ser.save()
-        return Response(ser.data)
-
+        #return Response(ser.data)
+        return Response({"code": 0,
+                         "message": "新增文章分类成功！",
+                         "data": ser.data})
     def list(self, request):
         cates = self.get_queryset()
         ser = self.get_serializer(cates, many=True)
-        return Response(ser.data)
+        #return Response(ser.data)
+        return Response({"code": 0,
+                         "message": "获取文章分类列表成功！",
+                         "data": ser.data})
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -43,19 +48,28 @@ class Cate(GenericViewSet):
         id = request.GET.get('id')
         cate=CateStore.objects.get(id=id)
         ser=CatesSerializer(cate)
-        return Response(ser.data)
+        #return Response(ser.data)
+        return Response({"code": 0,
+                         "message": "获取文章分类成功！",
+                         "data": ser.data})
 
     def update(self,request):
-        id = request.GET.get('id')
         data = request.data
+        id = data['id']
         cate = CateStore.objects.get(id=id)
         ser = CatesSerializer(cate, data=data)
         ser.is_valid()
         ser.save()
-        return Response(ser.data)
+        #return Response(ser.data)
+
+        return Response({"code": 0,
+                         "message": "更新分类信息成功！",
+                         "data": ser.data})
 
     def destroy(self, request):
         id = request.GET.get('id')
+        print(id)
         cate = CateStore.objects.get(id=id)
         cate.delete()
-        return Response({})
+        return Response({"code": 0,
+                        "message": "删除文章分类成功！"})

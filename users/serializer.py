@@ -47,28 +47,31 @@ class UserStoreSerializer(serializers.ModelSerializer):
 
 class UserInfoSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
-    username = serializers.CharField()
+    username = serializers.CharField(required=False)
     nickname = serializers.CharField()
     email = serializers.EmailField(validators=[EmailValidator(
         message='Invalid email format')])
-    user_pic = serializers.CharField(max_length=2000)
+    user_pic = serializers.CharField(max_length=30000, required=False)
 
     class Meta:
         model = UserStore
         fields = ('id', 'username', 'nickname', 'email', 'user_pic')
 
     def validate_nickname(self, value):
-        if not (1 <= len(value) <= 10):
-            raise serializers.ValidationError('用户名长度必须在1到10位之间')
-        if not re.match("^[a-zA-Z0-9]*$", value):
-            raise serializers.ValidationError('用户名只能包含大小写字母和数字')
+        if not (1 <= len(value) <= 30):
+            raise serializers.ValidationError('用户名长度必须在1到30位之间')
+        if not re.match("^[a-zA-Z0-9\u4e00-\u9fa5]*$", value):
+            raise serializers.ValidationError('用户名只能包含大小写字母、数字和汉字')
         return value
 
     def update(self, instance, validated_data):
         # 更新数据
         instance.nickname = validated_data['nickname']
         instance.email = validated_data['email']
-        instance.user_pic = validated_data['user_pic']
+        try:
+            instance.user_pic = validated_data['user_pic']
+        except:
+            pass
         instance.save()
         return instance
 

@@ -1,9 +1,14 @@
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from users.models import UserStore
 
 
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class UserIsSuperuser(GenericViewSet):
     def update(self, request):
         if request.user.is_superuser:

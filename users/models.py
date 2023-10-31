@@ -15,7 +15,7 @@ class UserStore(AbstractUser):
     last_login = models.DateTimeField(blank=True, null=True, verbose_name='上次登陆时间')
     date_joined = models.DateTimeField(blank=True, null=True, verbose_name='创建账户时间')
     nickname = models.CharField(max_length=30, blank=True, null=True, verbose_name='昵称')
-    user_pic = models.CharField(max_length=2000, blank=True, null=True, verbose_name='头像')
+    user_pic = models.CharField(max_length=30000, blank=True, null=True, verbose_name='头像')
 
     class Meta:
         db_table = 'userstore'  # 指明数据库表名

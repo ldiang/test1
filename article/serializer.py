@@ -32,11 +32,19 @@ class ArticlesSerializer(serializers.Serializer):
                                              queryset=UserStore.objects.all())
 
     pub_date = serializers.DateTimeField()
-    username = serializers.CharField(required=False)
-    nickname = serializers.CharField(required=False)
-    #cate_id = serializers.IntegerField(required=False)
+    cate_id = serializers.IntegerField(required=False, read_only=True)
     cate_name = serializers.CharField(required=False)
     cate_alias = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
+    nickname = serializers.CharField(required=False)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        cover_img = representation.get('cover_img')
+        if cover_img:
+            # 将完整的URL修改为相对路径 # 截取除首字符外的部分
+            representation['cover_img'] = cover_img[25:]
+        return representation
 
     def validate_title(self, value):
         pattern = r'^[a-zA-Z0-9\u4e00-\u9fa5？！。]{1,30}$'
