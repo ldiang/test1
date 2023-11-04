@@ -11,7 +11,8 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import UserStore
-from users.serializer import UserStoreSerializer
+from users.serializer import UserStoreSerializer, UserInfoSerializer, \
+    UserPasswordResetSerializer
 
 
 # Create your views here.
@@ -44,7 +45,6 @@ class UserLogin(ViewSet):
             hashed_password = user.password
             print(hashed_password)
             passwords_match = check_password(received_password, hashed_password)
-
             if passwords_match:
                 # return Response('您将要登录了')
 
@@ -54,10 +54,11 @@ class UserLogin(ViewSet):
                 refresh_token = str(refresh)
 
                 # 将令牌转换为字典以进行序列化
-                token_data = {
-                    'access_token': access_token,
-                    # 'refresh_token': refresh_token,
-                }
+                token_data = {"code": 0,
+                              "message": "登录成功！",
+                              'token': "Bearer " + access_token,
+                              # 'refresh_token': refresh_token,
+                              }
                 return Response(token_data, status=status.HTTP_200_OK)
             else:
                 return Response('您输入的密码不正确')
@@ -72,3 +73,74 @@ class UserList(ViewSet):
         users = UserStore.objects.all()
         ser = UserStoreSerializer(users, many=True)
         return Response(ser.data)
+
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class UserInfo(ViewSet):
+    def retrieve(self, request):
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        ser = UserInfoSerializer(user)
+        # return Response(ser.data)
+        return Response({"code": 0,
+                         "message": "获取用户基本信息成功！",
+                         "data": ser.data})
+
+    # 更新头像
+    def partial_update(self, request, *args, **kwargs):
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        avatar_data = request.data.get('avatar')
+        print(len(avatar_data))
+        serialized_data = {'user_pic': avatar_data}
+        serializer = UserInfoSerializer(user, data=serialized_data,
+                                        partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"code": 0,
+                             "message": "更新头像成功！"})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request):
+        data = request.data
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        ser = UserInfoSerializer(user, data=data)
+        # ser.is_valid()
+        # ser.save()
+        if ser.is_valid():
+            ser.save()
+            # return Response(ser.data, status=status.HTTP_201_CREATED)
+            return Response({"code": 0,
+                             "message": "修改用户信息成功！",
+                             "data": ser.data})
+        else:
+            print(ser.errors)
+            return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        # return Response(ser.data)
+
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class UserPasswordReset(ViewSet):
+
+    def update(self, request):
+        data = request.data
+        username = request.user.username
+        user = UserStore.objects.get(username=username)
+        if user.check_password(data['old_pwd']):
+            ser = UserPasswordResetSerializer(user, data=data)
+            if ser.is_valid():
+                ser.save()
+                # return Response(ser.data, status=status.HTTP_201_CREATED)
+                return Response({"code": 0,
+                                 "message": "更新密码成功！",
+                                 "data": ser.data})
+            else:
+                print(ser.errors)
+                return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"code": 1,
+                             "message": "原密码错误！"})
+

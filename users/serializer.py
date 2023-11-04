@@ -1,20 +1,21 @@
+from django.core.validators import EmailValidator
 from rest_framework import serializers
 from users.models import UserStore
 import re
 
 
 class UserStoreSerializer(serializers.ModelSerializer):
-
     id = serializers.ReadOnlyField()
     username = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True)
     repassword = serializers.CharField(write_only=True, required=False)
     is_staff = serializers.BooleanField(default=True, write_only=True)
 
+
     class Meta:
-        model=UserStore
-        #fields = '__all__'
-        fields=('id','username','password', 'repassword', 'is_staff')
+        model = UserStore
+        # fields = '__all__'
+        fields = ('id', 'username', 'password', 'repassword', 'is_staff')
 
     def validate(self, value):
         password = value['password']
@@ -38,6 +39,78 @@ class UserStoreSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         username = validated_data['username']
         password = validated_data['password']
-        user = UserStore.objects.create_user(username=username, password=password)
+        user = UserStore.objects.create_user(username=username,
+                                             password=password)
 
         return user
+
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
+    username = serializers.CharField(required=False)
+    nickname = serializers.CharField(required=False)
+    email = serializers.EmailField(validators=[EmailValidator(
+        message='Invalid email format')],required=False)
+    user_pic = serializers.CharField(max_length=5000, required=False)
+
+    class Meta:
+        model = UserStore
+        fields = ('id', 'username', 'nickname', 'email', 'user_pic')
+
+    def validate_nickname(self, value):
+        if not (1 <= len(value) <= 30):
+            raise serializers.ValidationError('用户名长度必须在1到30位之间')
+        if not re.match("^[a-zA-Z0-9\u4e00-\u9fa5]*$", value):
+            raise serializers.ValidationError('用户名只能包含大小写字母、数字和汉字')
+        return value
+
+    def update(self, instance, validated_data):
+        # 更新数据
+        if validated_data['nickname']:
+            instance.nickname = validated_data['nickname']
+        if validated_data['nickname']:
+            instance.email = validated_data['email']
+        if validated_data['user_pic']:
+            instance.user_pic = validated_data['user_pic']
+
+        instance.save()
+        return instance
+
+class UserPasswordResetSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
+    username = serializers.CharField(required=False)
+    password = serializers.CharField(write_only=True, required=False)
+    new_pwd = serializers.CharField(write_only=True, required=False)
+    re_pwd = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = UserStore
+        fields = ('id', 'username', 'password', 'new_pwd', 're_pwd')
+
+    def validate(self, value):
+        new_pwd = value['new_pwd']
+        re_pwd = value['re_pwd']
+
+        if len(re_pwd) < 6 or len(re_pwd) > 15:
+            raise serializers.ValidationError('密码长度必须在6到15位之间')
+        if ' ' in re_pwd:
+            raise serializers.ValidationError('密码不能包含空格')
+        if len(new_pwd) < 6 or len(new_pwd) > 15:
+            raise serializers.ValidationError('密码长度必须在6到15位之间')
+        if ' ' in new_pwd:
+            raise serializers.ValidationError('密码不能包含空格')
+        if re_pwd != new_pwd:
+            raise serializers.ValidationError('输入的两次新密码不相同')
+
+        return value
+
+    def update(self,instance, validated_data):
+        # 更新数据
+        instance.set_password(validated_data['new_pwd'])
+
+        instance.save()
+        return instance
+
+class GroupSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.CharField(required=False)
