@@ -80,32 +80,32 @@ class Articles(GenericViewSet):
             print(ser.errors)
             return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def list(self, request):
-    #     # 查询集需要根据某个条件排序后，才能继续查询和分页
-    #     queryset = self.get_queryset().order_by('-pub_date')
-    #     # 获取ArticleStore对象，并预获取相关的CateStore
-    #     article_data = ArticleStore.objects.prefetch_related(
-    #         'intermediatearticlecate_set__cate').order_by('-pub_date')
-    #
-    #     filter_cate = request.GET.get('cate_id')
-    #     filter_state = request.GET.get('state')
-    #     if filter_state and filter_state.strip():
-    #         queryset = article_data.filter(state=filter_state)
-    #
-    #     if filter_cate and filter_cate.strip():
-    #         # article_ids = IntermediateArticleCate.objects.filter(
-    #         #     cate_id=filter_cate).values_list('article_id', flat=True)
-    #         # queryset = queryset.filter(id__in=article_ids)
-    #         queryset = queryset.filter(cate=filter_cate)
-    #
-    #     page = self.paginate_queryset(article_data)
-    #     if page is not None:
-    #         ser = self.get_serializer(page, many=True)
-    #         # return Response(ser.data)
-    #         return Response({"code": 0,
-    #                          "message": "获取文章列表成功！",
-    #                          "data": ser.data,
-    #                          "total": queryset.count()})
+    def list(self, request):
+        # 查询集需要根据某个条件排序后，才能继续查询和分页
+        queryset = self.get_queryset().order_by('-pub_date')
+        # 获取ArticleStore对象，并预获取相关的CateStore
+        # article_data = ArticleStore.objects.prefetch_related(
+        #     'articleCateIntermediate_set__cate').order_by('-pub_date')
+
+        filter_cate = request.GET.get('cate_id')
+        filter_state = request.GET.get('state')
+        if filter_state and filter_state.strip():
+            queryset = queryset.filter(state=filter_state)
+
+        if filter_cate and filter_cate.strip():
+            # article_ids = IntermediateArticleCate.objects.filter(
+            #     cate_id=filter_cate).values_list('article_id', flat=True)
+            # queryset = queryset.filter(id__in=article_ids)
+            queryset = queryset.filter(cate_id=filter_cate)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            ser = self.get_serializer(page, many=True)
+            # return Response(ser.data)
+            return Response({"code": 0,
+                             "message": "获取文章列表成功！",
+                             "data": ser.data,
+                             "total": queryset.count()})
 
 
 @authentication_classes([JWTAuthentication])

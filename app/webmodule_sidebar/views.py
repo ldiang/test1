@@ -7,8 +7,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-from front_sidebar.models import LayoutSidebar
-from front_sidebar.serializer import SidebarSerializer
+from webmodule_sidebar.models import LayoutSidebar
+from webmodule_sidebar.serializer import SidebarSerializer
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])

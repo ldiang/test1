@@ -104,6 +104,7 @@ class UserInfo(ViewSet):
 
     def update(self, request):
         data = request.data
+        print(request.POST)
         username = request.user.username
         user = UserStore.objects.get(username=username)
         ser = UserInfoSerializer(user, data=data)

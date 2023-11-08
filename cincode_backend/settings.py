@@ -48,9 +48,9 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'article_cate.apps.ArticleCateConfig',
     'article.apps.ArticleConfig',
-    'app.webmodule_sidebar'
-
-
+    'app.webmodule_sidebar',
+    'exposition.apps.ExpositionConfig'
+    'utils.db_general_models'
 ]
 
 MIDDLEWARE = [

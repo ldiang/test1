@@ -70,8 +70,8 @@ class UserInfoSerializer(serializers.ModelSerializer):
             instance.nickname = validated_data['nickname']
         if validated_data['nickname']:
             instance.email = validated_data['email']
-        if validated_data['user_pic']:
-            instance.user_pic = validated_data['user_pic']
+        # if validated_data['user_pic']:
+        #     instance.user_pic = validated_data['user_pic']
 
         instance.save()
         return instance

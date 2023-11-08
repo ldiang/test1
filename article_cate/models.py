@@ -13,3 +13,5 @@ class ArticleCateStore(models.Model):
         db_table = 'store_article_cate'
         verbose_name = '文章分类'
         verbose_name_plural = verbose_name
+    def __str__(self):
+        return self.cate_name

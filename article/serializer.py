@@ -26,11 +26,17 @@ class ArticleCateSerializer(serializers.ModelSerializer):
 
 #文章序列化器
 class ArticlesSerializer(serializers.ModelSerializer):
+    #cate_id = serializers.StringRelatedField(many=True, source='cate_id.cate_name')  # 将多对多关系转化为字符串
+    cate_name = serializers.SerializerMethodField()
+
+
     class Meta:
         model = ArticleStore
         #fields = ('btitle', 'bread', 'sms_code')
         fields = ('__all__')
 
+    def get_cate_name(self, obj):
+        return ", ".join([cate.cate_name for cate in obj.cate_id.all()])
     # id = serializers.ReadOnlyField()
     # title = serializers.CharField()
     # content = serializers.CharField(max_length=10000)
