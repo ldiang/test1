@@ -16,10 +16,9 @@ from datetime import timedelta
 
 AUTH_USER_MODEL = 'users.UserStore'
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0,os.path.join(BASE_DIR,'app'))
+sys.path.insert(0, os.path.join(BASE_DIR, 'app'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -30,11 +29,12 @@ SECRET_KEY = 'django-insecure-gj*h%*ex3ip*m!tc)8zv^vw+hiii7vv6)-3lknev14_j@j%e$&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','192.168.2.113']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.2.113']
 
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,8 +49,9 @@ INSTALLED_APPS = [
     'article_cate.apps.ArticleCateConfig',
     'article.apps.ArticleConfig',
     'app.webmodule_sidebar',
-    'exposition.apps.ExpositionConfig'
+    'exposition.apps.ExpositionConfig',
     'utils.db_general_models'
+
 ]
 
 MIDDLEWARE = [
@@ -62,7 +63,37 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # modeltranslation所需
+
 ]
+
+# modeltranslation所需
+gettext = lambda s: s
+LANGUAGES = [
+    ('zh-Hans', gettext('Chinese (Simplified)')),
+    ('de', gettext('German')),
+    ('en', gettext('English')),
+    # 其他语言
+]
+# LANGUAGES = [
+#     ('zh-Hans', 'Chinese (Simplified)'),
+#     ('de', 'German'),
+#     ('en', 'English'),
+#     # 其他语言
+# ]
+
+# 配置 modeltranslation
+# 配置 modeltranslation 使用 manual 模式
+# MODELTRANSLATION_AUTO_POPULATE = 'manual' True False
+MODELTRANSLATION_AUTO_POPULATE = False
+
+# 默认语言
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'zh-Hans'
+# 指定翻译语言
+# 默认是汉语了，所以这里不需要添加汉语
+MODELTRANSLATION_LANGUAGES = ('zh-Hans', 'de', 'en')
+# 指定返回语言顺序  (注意返回语言必须在翻译上面一行的翻译语言的列表中)
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('zh-Hans', 'de', 'en')
 
 ROOT_URLCONF = 'cincode_backend.urls'
 
@@ -119,8 +150,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
+LANGUAGE_CODE = 'zh-Hans'
+# LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -137,7 +168,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 CORS_ORIGIN_ALLOW_ALL = True
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

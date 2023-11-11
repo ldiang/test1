@@ -12,6 +12,9 @@ urlpatterns = [
 
     path('my/', include('users.urls')),
     path('api/', include('users.urls')),
+    path('utils/dbmanage/', include('utils.db_general_models.urls')),
+    path('expo/', include('exposition.urls')),
+
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
