@@ -50,7 +50,9 @@ INSTALLED_APPS = [
     'article.apps.ArticleConfig',
     'app.webmodule_sidebar',
     'exposition.apps.ExpositionConfig',
-    'utils.db_general_models'
+    'utils.db_general_models',
+    'utils.sort_company'
+
 
 ]
 

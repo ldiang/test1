@@ -1,26 +1,22 @@
-from django.utils.translation import activate
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-
-
-@api_view(['GET'])
-def your_api_view(request):
-    requested_language = request.GET.get('language', None)
-
-    if requested_language and requested_language in ['de', 'en']:
-        activate(requested_language)
+try:
+    latest_expo_annual_info = ExpoStore.objects.filter(name=expo_instance).order_by('-year').first()
+    if latest_expo_annual_info:
+        deactivate_all()
+        ser = ExpoAnnualInfoSerializer(latest_expo_annual_info, context={'lang': lang})
+        print("ser.data:", ser.data)
+        return Response({"code": 0,
+                         "message": "获取展会年度信息成功！",
+                         "data": ser.data})
     else:
-        activate('zh-Hans')  # 默认语言
+        deactivate_all()
+        return Response({"code": 1,
+                         "message": "没有匹配的展会年度信息",
+                         "data": None})  # 或者根据需要返回一个空的数据对象
+except ExpoStore.DoesNotExist:
+    # 处理对象不存在的情况
+    return Response({"code": 2,
+                     "message": "ExpoStore对象不存在",
+                     "data": None})  # 或者根据需要返回一个空的数据对象
 
-    # 处理视图逻辑，获取数据并返回给前端
 
-    # ...
 
-    # 返回翻译后的数据
-    translated_data = {
-        'key1': _('Translated value 1'),
-        'key2': _('Translated value 2'),
-        # ...
-    }
-
-    return Response(translated_data)

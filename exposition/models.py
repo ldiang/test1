@@ -31,6 +31,8 @@ class ExpoStore(models.Model):
 
     date = models.DateField()
 
+    year = models.PositiveIntegerField(default=2023)
+
     num_expos = models.IntegerField()
 
     num_visit = models.IntegerField()
@@ -43,6 +45,21 @@ class ExpoStore(models.Model):
     class Meta:
         db_table = 'store_expo'
         verbose_name = '展会'
+        verbose_name_plural = verbose_name
+        unique_together = ['name', 'year']
+
+
+class ExpoExhibitorStore(models.Model):
+    company = models.ForeignKey(ExpoStore, on_delete=models.PROTECT,
+                                related_name='exhibitor_current_year',
+                                null=False)
+    expo = models.ForeignKey(ExpoStore, on_delete=models.PROTECT,
+                             related_name='expo_current_year', null=False)
+    expo_link = models.URLField()
+
+    class Meta:
+        db_table = 'store_expo_exhibitor'
+        verbose_name = '展会展商列表'
         verbose_name_plural = verbose_name
 
 

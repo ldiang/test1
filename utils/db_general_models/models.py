@@ -48,7 +48,7 @@ class UtilCity(models.Model):
 
 
 class UtilSector(models.Model):
-    sector = models.CharField(max_length=255)
+    sector = models.CharField(max_length=255, null=True)
     parent_sector = models.ForeignKey('self', null=True, blank=True,
                                       on_delete=models.PROTECT)
 
@@ -56,13 +56,16 @@ class UtilSector(models.Model):
         db_table = 'util_sector'
         verbose_name = '行业'
         verbose_name_plural = verbose_name
+        unique_together = ['sector', 'parent_sector']
 
     def __str__(self):
         return self.sector
 
 
 class UtilTheme(models.Model):
-    theme = models.CharField(max_length=255)
+    theme = models.CharField(max_length=255, null=True)
+    sector = models.ForeignKey(UtilSector, null=True, blank=True,
+                               on_delete=models.PROTECT)
 
     class Meta:
         db_table = 'util_theme'
@@ -71,4 +74,3 @@ class UtilTheme(models.Model):
 
     def __str__(self):
         return self.theme
-

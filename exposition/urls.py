@@ -6,6 +6,11 @@ urlpatterns = [
     path('staticinfolist/', views.ExpoStaticInfoList.as_view({'post': 'create', 'delete': 'destroy', 'get': 'list'})),
     path('staticinfo/', views.ExpoStaticInfo.as_view(
         {'get': 'retrieve','put': 'update'})),
+    path('annualinfolist/', views.ExpoAnnualInfos.as_view(
+        {'post': 'create'})),
+
+    path('annualinfo/', views.ExpoAnnualInfo.as_view(
+        {'get': 'retrieve'})),
 
     # path('list/', views.Articles.as_view({'get': 'list'})),
     #
