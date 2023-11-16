@@ -11,7 +11,6 @@ from utils.sort_company.serializer import SortCompaniesActionSerializer, \
     IntermediateCompanySectorSerializer, IntermediateCompanyThemeSerializer
 from utils.utils_service import CityService
 from django.utils.translation import activate, deactivate_all
-from rest_framework import serializers
 
 from utils.utils_intermediate import IntermediateService
 
@@ -188,92 +187,88 @@ class SortCompaniesAction(GenericViewSet):
         print(datalist)
         data_num = len(datalist)
 
-        not_validated_num = 0
-        not_validated_list = []
+        failed_writes = 0  # 记录重复写入的次数
+        failed_list = []
 
-        for index, data in enumerate(datalist):
-            lang = 'de'
-            print(data)
-            country = None
+        try:
+            for index, data in enumerate(datalist):
+                try:
+                    lang = 'de'
+                    print(data)
+                    country = None
 
-            if 'country' in data:
-                country_name = data['country']
+                    if 'country' in data:
+                        country_name = data['country']
 
-                if UtilCountry.objects.filter(
-                        country_cn=country_name).exists():
-                    country = UtilCountry.objects.get(
-                        country_cn=country_name)
-                elif UtilCountry.objects.filter(
-                        country_en=country_name).exists():
-                    country = UtilCountry.objects.get(
-                        country_en=country_name)
-                else:
-                    country = UtilCountry.objects.get(id=1)
+                        if UtilCountry.objects.filter(
+                                country_cn=country_name).exists():
+                            country = UtilCountry.objects.get(
+                                country_cn=country_name)
+                        elif UtilCountry.objects.filter(
+                                country_en=country_name).exists():
+                            country = UtilCountry.objects.get(
+                                country_en=country_name)
+                        else:
+                            country = UtilCountry.objects.get(id=1)
 
-            # country = UtilCountry.objects.get(country_cn=data['country'])
+                    # country = UtilCountry.objects.get(country_cn=data['country'])
 
-            try:
-                city = UtilCity.objects.get(city_en=data['city'])
-            except UtilCity.DoesNotExist:
-                city_service = CityService()
-                city = city_service.create_new_city(data['city'],
-                                                    country.country_cn)
+                    try:
+                        city = UtilCity.objects.get(city_en=data['city'])
+                    except UtilCity.DoesNotExist:
+                        city_service = CityService()
+                        city = city_service.create_new_city(data['city'],
+                                                            country.country_cn)
 
-            data['country'] = country.country_cn
-            data['city'] = city.id
-            try:
-                ser = self.get_serializer(data=data)
+                    data['country'] = country.country_cn
+                    data['city'] = city.id
 
-                ser.is_valid(raise_exception=True)
-                activate(lang)
-                ser.save()
-                deactivate_all()
+                    ser = self.get_serializer(data=data)
+                    if ser.is_valid():
+                        activate(lang)
+                        ser.save()
+                        deactivate_all()
 
-                ser_instance = ser
-                field_master = 'company'
-                field_detail = 'sector'
-                IntermediateService.intermediate_table_save(
-                    data,
-                    SortCompanyStore,
-                    UtilSector,
-                    field_master,
-                    field_detail,
-                    ser_instance,
-                    IntermediateCompanySectorSerializer
-                )
-                field_detail = 'theme'
-                IntermediateService.intermediate_table_save(
-                    data,
-                    SortCompanyStore,
-                    UtilTheme,
-                    field_master,
-                    field_detail,
-                    ser_instance,
-                    IntermediateCompanyThemeSerializer
-                )
-            #
-            # except IntegrityError:
-            #     # 处理唯一性约束异常
-            #     failed_unique_num += 1
-            #     failed_unique_list.append(data.get('name'))
-            #     pass
+                        ser_instance = ser
+                        field_master = 'company'
+                        field_detail = 'sector'
+                        IntermediateService.intermediate_table_save(
+                            data,
+                            SortCompanyStore,
+                            UtilSector,
+                            field_master,
+                            field_detail,
+                            ser_instance,
+                            IntermediateCompanySectorSerializer
+                        )
+                        field_detail = 'theme'
+                        IntermediateService.intermediate_table_save(
+                            data,
+                            SortCompanyStore,
+                            UtilTheme,
+                            field_master,
+                            field_detail,
+                            ser_instance,
+                            IntermediateCompanyThemeSerializer
+                        )
 
-            except serializers.ValidationError as ve:
-                # 处理验证失败异常
-                not_validated_num += 1
-                not_validated_list.append(data['name'])
-                pass
+                except IntegrityError:
+                    failed_writes += 1
+                    failed_list.append(data['name'])
 
-        if not_validated_num == 0:
+        except Exception as e:
+            # 如果在循环中发生异常，这里会捕获异常并进行处理
+            return Response({"code": 1, "message": f"发生错误：{str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if failed_writes == 0:
             return Response({"code": 0,
                              "message": f"成功添加{data_num}家公司信息！"})
         else:
             return Response({"code": 1,
-                             "message": f"成功添加{data_num - not_validated_num}家公司信息！"
-                                        f"{not_validated_num}家信息未被写入！",
-                             "data": not_validated_list,
-                             "not_validated_num": not_validated_num
-                             })
+                             "message": f"成功添加{data_num - failed_writes}家公司信息！"
+                                        f"{failed_writes}家信息重复未被写入！",
+                             "data": failed_list})
 
     def list(self, request):
         lang = request.GET.get('lang', 'zh-Hans')

@@ -22,27 +22,37 @@ class LangSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-
-class CitySerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField()
     # SlugRelatedField用于处理外键关系。它需要一个查询集（这里是从UtilCountry模型获取的所有对象），
     # SlugRelatedField使用slug_field参数指定外键字段的名称。序列化或反序列化时都可以用ID之外的其他字段来定位外键关联的对象
     # 原理在于当序列化器处理请求数据时，它自动将slug_field指定的字段换为相应的UtilCountry对象。
+
+
+class CitySerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
+    city_en = serializers.CharField(required=False)
+    city_cn = serializers.CharField(required=False)
     country = serializers.SlugRelatedField(slug_field='country_cn',
-                                           queryset=UtilCountry.objects.all())
+                                           queryset=UtilCountry.objects.all(),required=False)
 
     class Meta:
         model = UtilCity
         fields = '__all__'
 
     def create(self, validated_data):
-        cate = UtilCity.objects.create(**validated_data)
-        return cate
+        city = UtilCity.objects.create(**validated_data)
+        return city
 
     def update(self, instance, validated_data):
-        instance.country_en = validated_data['country_en']
-        instance.country_cn = validated_data['country_cn']
-        instance.country = validated_data['country']
+        # 检查 'city_en' 是否在 validated_data 中，并且不为 None
+        if 'city_en' in validated_data and validated_data['city_en'] is not None:
+            instance.city_en = validated_data['city_en']
+
+        if 'city_cn' in validated_data and validated_data['city_cn'] is not None:
+            instance.city_cn = validated_data['city_cn']
+
+        if 'country' in validated_data and validated_data['country'] is not None:
+            instance.country = validated_data['country']
+
         instance.save()
         return instance
 
@@ -69,7 +79,9 @@ class CountrySerializer(serializers.Serializer):
 
 class SectorSerializer(serializers.ModelSerializer):
     parent_sector = serializers.SlugRelatedField(slug_field='sector',
-                                                 queryset=UtilSector.objects.all(),required=False, allow_null=True)
+                                                 queryset=UtilSector.objects.all(),
+                                                 required=False,
+                                                 allow_null=True)
 
     class Meta:
         model = UtilSector

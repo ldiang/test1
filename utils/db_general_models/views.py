@@ -108,6 +108,17 @@ class DB_Manage_city(GenericViewSet):
                          }
                          })
 
+    def update(self,request):
+        data = request.data
+        id = request.data['id']
+        city = UtilCity.objects.get(id=id)
+        ser = self.get_serializer(city, data=data)
+        ser.is_valid()
+        ser.save()
+        return Response({"code": 0,
+                         "message": "修改城市信息成功！",
+                         "data": ser.data})
+
     def destroy(self, request):
         cityid = request.GET.get('id')
         print(cityid)
@@ -241,7 +252,7 @@ class DB_Manage_theme(GenericViewSet):
                 {'code': 2, 'message': f'删除失败！原因：{str(e)}'},
                 status=status.HTTP_200_OK)
 
-
+#这个视图用于前端级联选择器的构建
 class DB_Manage_sector_rebuild(GenericViewSet):
     queryset = UtilSector.objects.filter(parent_sector__isnull=True)
     serializer_class = SectorRebuildSerializer

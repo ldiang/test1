@@ -9,7 +9,7 @@ urlpatterns = [
          views.DB_Manage_country.as_view({'post': 'create', 'get': 'list'})),
     #
     path('city/',
-         views.DB_Manage_city.as_view({'post': 'create', 'get': 'list','delete': 'destroy'})),
+         views.DB_Manage_city.as_view({'post': 'create', 'get': 'list','delete': 'destroy','put': 'update'})),
 
     path('sector/',
          views.DB_Manage_sector.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy'})),

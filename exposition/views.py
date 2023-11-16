@@ -169,6 +169,7 @@ class ExpoAnnualInfos(GenericViewSet):
         data['theme'] = theme_instances
 
         lang = request.GET.get('lang', 'zh-Hans')
+        activate(lang)
         # 第5步：主数据写入数据库
         ser = self.get_serializer(data=data, context={'lang': lang})
         if ser.is_valid():

@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/', include('users.urls')),
     path('utils/dbmanage/', include('utils.db_general_models.urls')),
     path('expo/', include('exposition.urls')),
+    path('company/', include('utils.sort_company.urls')),
 
 ]
 if settings.DEBUG:

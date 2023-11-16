@@ -32,6 +32,7 @@ class IntermediateCompanySector(models.Model):
         db_table = 'intermediate_company_sector'
         verbose_name = '企业及行业中间表'
         verbose_name_plural = verbose_name
+        unique_together = ['company', 'sector']
 
 
 class IntermediateCompanyTheme(models.Model):
@@ -42,3 +43,4 @@ class IntermediateCompanyTheme(models.Model):
         db_table = 'intermediate_company_theme'
         verbose_name = '企业及热门主题中间表'
         verbose_name_plural = verbose_name
+        unique_together = ['company', 'theme']

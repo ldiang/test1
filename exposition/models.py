@@ -71,7 +71,7 @@ class IntermediateExpoSector(models.Model):
         db_table = 'intermediate_expo_sector'
         verbose_name = '展会及行业中间表'
         verbose_name_plural = verbose_name
-
+        unique_together = ['expo', 'sector']
 
 class IntermediateExpoTheme(models.Model):
     expo = models.ForeignKey(ExpoStore, on_delete=models.CASCADE)
@@ -81,3 +81,4 @@ class IntermediateExpoTheme(models.Model):
         db_table = 'intermediate_expo_theme'
         verbose_name = '展会及热门主题中间表'
         verbose_name_plural = verbose_name
+        unique_together = ['expo', 'theme']

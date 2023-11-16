@@ -1,22 +1,46 @@
-try:
-    latest_expo_annual_info = ExpoStore.objects.filter(name=expo_instance).order_by('-year').first()
-    if latest_expo_annual_info:
-        deactivate_all()
-        ser = ExpoAnnualInfoSerializer(latest_expo_annual_info, context={'lang': lang})
-        print("ser.data:", ser.data)
-        return Response({"code": 0,
-                         "message": "获取展会年度信息成功！",
-                         "data": ser.data})
-    else:
-        deactivate_all()
-        return Response({"code": 1,
-                         "message": "没有匹配的展会年度信息",
-                         "data": None})  # 或者根据需要返回一个空的数据对象
-except ExpoStore.DoesNotExist:
-    # 处理对象不存在的情况
-    return Response({"code": 2,
-                     "message": "ExpoStore对象不存在",
-                     "data": None})  # 或者根据需要返回一个空的数据对象
+<template>
+  <div>
+    <label for="cityInput">城市名称：</label>
+    <input type="text" id="cityInput" v-model="cityName" @input="translateCity" />
+    <p>英文名称：{{ translatedCity.en }}</p>
+    <p>中文名称：{{ translatedCity.cn }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      cityName: '',
+      translatedCity: {
+        en: '',
+        cn: ''
+      }
+    };
+  },
+  methods: {
+    // 调用翻译API的函数，这里使用了假设的翻译函数
+    translate(cityName) {
+      // 在实际应用中，你需要调用真实的翻译API
+      // 这里仅作为演示目的，你需要替换成真实的API调用
+      // 例如，可以使用axios库发送HTTP请求到翻译API
+
+      // 假设这里是一个翻译函数
+      return {
+        en: `Translated_${cityName}`, // 用你的翻译结果替换这里
+        cn: cityName
+      };
+    },
+    translateCity() {
+      const translated = this.translate(this.cityName);
+      this.translatedCity.en = translated.en;
+      this.translatedCity.cn = translated.cn;
+    }
+  }
+};
+</script>
+
+
 
 
 
